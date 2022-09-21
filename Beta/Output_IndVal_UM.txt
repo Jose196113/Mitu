@@ -1,0 +1,40 @@
+
+ Multilevel pattern analysis
+ ---------------------------
+
+ Association function: IndVal.g
+ Significance level (alpha): 0.05
+
+ Total number of species: 34
+ Selected number of species: 13 
+ Number of species associated to 1 group: 12 
+ Number of species associated to 2 groups: 1 
+
+ List of species associated to each combination: 
+
+ Group Bosque  #sps.  7 
+                       stat p.value   
+Pachycondyla harpax   0.397   0.005 **
+Neoponera apicalis    0.282   0.005 **
+Hypoponera trigona    0.254   0.005 **
+Ectatomma lugens      0.233   0.005 **
+Gnamptogenys horni    0.206   0.005 **
+Pachycondyla lattkei  0.170   0.015 * 
+Gnamptogenys haenschi 0.145   0.035 * 
+
+ Group Chagra  #sps.  2 
+                     stat p.value   
+Ectatomma brunneum  0.621   0.005 **
+Neoponera commutata 0.170   0.035 * 
+
+ Group Urbano  #sps.  3 
+                         stat p.value   
+Odontomachus haematodus 0.426   0.005 **
+Holcoponera striatula   0.297   0.005 **
+Ponerocantha enodis     0.194   0.005 **
+
+ Group Bosque+Chagra  #sps.  1 
+                         stat p.value   
+Pachycondyla crassinoda 0.459   0.005 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 

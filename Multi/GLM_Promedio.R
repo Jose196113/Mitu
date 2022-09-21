@@ -1,115 +1,95 @@
-setwd("~/Descargas/Multivariado/Transectos")
+setwd("~/Rstudio/Mitu/Multi")
 library(readxl)
 library(vegan)
 library(ggplot2)
 library(Metrics)
 library(DescTools)
+library(patchwork)
+library(car)
+library(GGally)
+library(AICcmodavg)
 Transectos<-read_xlsx("Variables1.xlsx")
 
-##La exploracion por esa mierda de puntos es un dolor de huevos asi que lo mejor es coger todos las funciones esas
-##de mierda y luego comparar entre ellas con akaike a ver si tus datos sirven o no
+#Analisis preliminar
+A<-data.frame(Transectos$Riqueza,Transectos$Hojarasca3,Transectos$Altitud,Transectos$Dist_Centro,Transectos$Luz3,Transectos$Temperatura3,Transectos$Humedad3,Transectos$Troncos3)
+colnames(A)<-c("Riqueza","Hojarasca","Altitud","Distancia_Centro_Urbano","Cobertura_dosel","Temperatura","Humedad", "Troncos")
+
+Ceros<-sum(Transectos$Riqueza == 0) * 100 / nrow(Transectos)
+Ceros
+
+#Observamos la linealidad de las variables
+a<-ggplot(A,aes(y=Riqueza,x=Hojarasca,col=Transectos$Zona))+geom_point()+theme(legend.position="none")
+b<-ggplot(A,aes(y=Riqueza,x=Troncos,col=Transectos$Zona))+geom_point()+theme(legend.position="none")
+c<-ggplot(A,aes(y=Riqueza,x=Humedad,col=Transectos$Zona))+geom_point()+theme(legend.position="none")
+d<-ggplot(A,aes(y=Riqueza,x=Temperatura,col=Transectos$Zona))+geom_point()+theme(legend.position="none")
+e<-ggplot(A,aes(y=Riqueza,x=Altitud,col=Transectos$Zona))+geom_point()+theme(legend.position="none")
+f<-ggplot(A,aes(y=Riqueza,x=Distancia_Centro_Urbano,col=Transectos$Zona))+geom_point()+theme(legend.position="none")
+g<-ggplot(A,aes(y=Riqueza,x=Cobertura_dosel,col=Transectos$Zona))+geom_point()+theme(legend.position="none")
+a+b+c+d+e+f+g+plot_layout(nrow = 4,ncol = 2)
+
+#Correlacion entre variables(Multicolinealidad)
+ggpairs(A,ggplot2::aes(colour=Transectos$Zona),title="Correlación entre las variables") +
+  theme(plot.title = element_text(hjust = 0.5))
+ggpairs(A)+theme(text = element_text(size = 11, face = "bold"))
+
+######################################################################### Evaluando los modelos lineales
 
 #Ensayamos con modelo lineal general
-lm<-lm(Transectos$Incidencia~Transectos$Hojarasca3+Transectos$Altitud+Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+Transectos$Humedad3+Transectos$Troncos3)
-lm#Sinceramente creo q esto sobra
-plot(lm)#Y esto tambien sobra, de igual manera en los que vienen jaja
-summary(lm)
-
-
-#Ensayamos con modelo lineal generalizado poisson
-glm<-glm(Transectos$Incidencia~Transectos$Hojarasca3+Transectos$Altitud+Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+Transectos$Humedad3+Transectos$Troncos3, family = poisson(link = "log"))
-glm
-plot(glm)
-summary(glm)
-
-
-#Ensayamos con modelo lineal generalizado quasipoisson
-glm1<-glm(Transectos$Incidencia~Transectos$Hojarasca3+Transectos$Altitud+Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+Transectos$Humedad3+Transectos$Troncos3, family = quasipoisson(link = "log"))
-glm1
-plot(glm1)
-summary(glm1)
-
-
-#Ensayamos con modelo lineal generalizado gaussiano
-glm2<-glm(Transectos$Incidencia~Transectos$Hojarasca3+Transectos$Altitud+Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+Transectos$Humedad3+Transectos$Troncos3, family = gaussian(link = "identity"))
-glm2
-plot(glm2)
-summary(glm2)
-
-##Comparamos los modelos con akaike y con el error medio cuadrado porque en quasipoisson no se puede akaike
-##tanto el error como el akaike se escoge el q sea mas bajito
-AIC(lm)
-AIC(glm)
-AIC(glm1)
-AIC(glm2)
-rmse(Transectos$Incidencia, predict(lm))
-rmse(Transectos$Incidencia, predict(glm))
-rmse(Transectos$Incidencia, predict(glm1))
-rmse(Transectos$Incidencia, predict(glm2))
-
-##Despues de haber elegido el modelo mejor ajustado a los datos, eliminas las variables que no sea significativas
-##O sea las que no tienen asteriscos ni puntos cuando le das en "summary(lo que sea)"
-##Entonces haces lo mismo de arriba con menos variables
-glm3<-glm(Transectos$Incidencia~Transectos$Troncos+Transectos$Luz,family = poisson(link = "log"))
-glm3
-plot(glm3)
-summary(glm3)
-AIC(glm3)
-
-##Si siguen saliendo variables no significativas podes seguirlas eliminando pero ojo con el AIC
-##Se supone que el modelo deberia mejorar sino es asi(sube el AIC) te quedas con el modelo anterior
-glm4<-lm(Transectos$Incidencia~Transectos$Troncos)
-glm4
-plot(glm4)
-summary(glm4)
-#Comparamos
-AIC(glm4)
-rmse(Transectos$Incidencia, predict(glm3))
-#Si tu modelo fue poisson(probablemente lo sea) sacas los valores de la funcion link con esto,
-#Si fue lineal general no y solo tomas el del summary
-exp(glm3$coefficients)
-##Estos los graficos que deberian decirle que distribucion usar pero ni idea
-plot(Transectos$Incidencia~Transectos$Troncos)
-plot(Transectos$Incidencia~Transectos$Luz)
-plot(Transectos$Incidencia~Transectos$Humedad)
-plot(Transectos$Incidencia~Transectos$Temperatura)
-plot(Transectos$Incidencia~Transectos$Zona)
-plot(Transectos$Incidencia~Transectos$Temperatura+Transectos$Humedad+Transectos$Troncos)
-##El grafico que resume tu modelo
-install.packages("patchwork")
-library(patchwork)
-A<-ggplot(Transectos,aes(x=Troncos,y=Incidencia, col = Zona,)) + ggtitle("") + geom_point(cex=6) + theme(legend.position="none",text = element_text(size = 24))
-B<-ggplot(Transectos,aes(x=Humedad,y=Incidencia, col = Zona)) + ggtitle("") + geom_point(cex=6) + theme(legend.position="none",text = element_text(size = 24))
-C<-ggplot(Transectos,aes(x=Temperatura,y=Incidencia, col = Zona)) + ggtitle("") + geom_point(cex=6) + theme(legend.position="none",text = element_text(size = 24))
-
-A+B+C + plot_layout(nrow = 3,ncol = 1)
-
-######################################################################### Por riqueza
-setwd("~/Descargas/Multivariado/Transectos")
-library(readxl)
-library(vegan)
-library(ggplot2)
-library(Metrics)
-library(DescTools)
-Transectos<-read_xlsx("Variables1.xlsx")
-
 lm<-lm(Transectos$Riqueza~Transectos$Hojarasca3+Transectos$Altitud+Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+Transectos$Humedad3+Transectos$Troncos3)
 lm
 plot(lm)
 summary(lm)
-
+#Ensayamos con modelo lineal generalizado poisson
 glm<-glm(Transectos$Riqueza~Transectos$Hojarasca3+Transectos$Altitud+Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+Transectos$Humedad3+Transectos$Troncos3, family = poisson(link = "log"))
 glm
 plot(glm)
 summary(glm)
+#Esta parte es porque seleccionamos poisson por tener datos discretos
+#Probamos lo colinealidad
+multicolinealidad<-vif(glm(Transectos$Riqueza~Transectos$Hojarasca3+Transectos$Altitud+
+                             Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+
+                             Transectos$Humedad3+Transectos$Troncos3,family = poisson, data = Transectos))
+multicolinealidad # Si es >3 alta colinealidad
+
+#Eliminamos la variable con la colinealidad mas alta
+multicolinealidad<-vif(glm(Transectos$Riqueza~Transectos$Altitud+
+                             Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+
+                             Transectos$Humedad3+Transectos$Troncos3,family = poisson, data = Transectos))
+multicolinealidad # Si es >3 alta colinealidad
+
+#Eliminamos la variable con la colinealidad mas alta
+multicolinealidad<-vif(glm(Transectos$Riqueza~Transectos$Altitud+
+                             Transectos$Dist_Centro+Transectos$Luz3+
+                             Transectos$Humedad3+Transectos$Troncos3,family = poisson, data = Transectos))
+multicolinealidad # Si es >3 alta colinealidad
+
+#Modelo sin variables correlacionadas
+glm5<-glm(Transectos$Riqueza~Transectos$Altitud+
+           Transectos$Dist_Centro+Transectos$Luz3+
+           Transectos$Humedad3+Transectos$Troncos3,family = poisson)
+
+#Medimos la sobredispersion de los datos
+dispersion <- glm5$deviance / glm5$df.residual 
+dispersion #si es >1.2 tenemos problemas
+
+cooks.distance(glm)#Para detectar outliers que esten molestando en el ajuste
+plot(cooks.distance(glm), xlab = "Observation", ylab = "Cook's distance", 
+     type = "h", ylim = c(0, 1.1), cex.lab = 1.5)
+abline(h = 1, lty = 2)# Si supera la linea tenemos observaciones con muchos outliers creando ruido
+AIC(glm5)
+extractAIC(glm5,AIC="AICc")
+AICc(glm5, return.K = FALSE, c.hat = 1, second.ord = TRUE, nobs = NULL) 
 
 
+
+
+#Ensayamos con modelo lineal generalizado quasipoisson
 glm1<-glm(Transectos$Riqueza~Transectos$Hojarasca3+Transectos$Altitud+Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+Transectos$Humedad3+Transectos$Troncos3, family = quasipoisson(link = "log"))
 glm1
 plot(glm1)
 summary(glm1)
 
-
+#Ensayamos con modelo lineal generalizado gaussiano
 glm2<-glm(Transectos$Riqueza~Transectos$Hojarasca3+Transectos$Altitud+Transectos$Dist_Centro+Transectos$Luz3+Transectos$Temperatura3+Transectos$Humedad3+Transectos$Troncos3, family = gaussian(link = "identity"))
 glm2
 plot(glm2)
@@ -123,15 +103,26 @@ rmse(Transectos$Riqueza, predict(lm))
 rmse(Transectos$Riqueza, predict(glm))
 rmse(Transectos$Riqueza, predict(glm1))
 rmse(Transectos$Riqueza, predict(glm2))
+AICc(lm, return.K = FALSE, c.hat = 1, second.ord = TRUE, nobs = NULL) 
+AICc(glm, return.K = FALSE, c.hat = 1, second.ord = TRUE, nobs = NULL) 
+AICc(glm1, return.K = FALSE, c.hat = 1, second.ord = TRUE, nobs = NULL) 
+AICc(glm2, return.K = FALSE, c.hat = 1, second.ord = TRUE, nobs = NULL) 
+AICc(glm3, return.K = FALSE, c.hat = 1, second.ord = TRUE, nobs = NULL) 
+AICc(glm4, return.K = FALSE, c.hat = 1, second.ord = TRUE, nobs = NULL) 
+AICc(glm5, return.K = FALSE, c.hat = 1, second.ord = TRUE, nobs = NULL) 
 
 
-#glm3<-lm(Transectos$Riqueza~Transectos$Luz3+Transectos$Altitud)
+#Modelo con las variables que son signficativas
 glm3<-glm(Transectos$Riqueza~Transectos$Luz3+Transectos$Altitud,  family = poisson(link = "log"))
 glm3
 plot(glm3)
 summary(glm3)
 AIC(glm3)
 
+multicolinealidad<-vif(glm(Transectos$Riqueza~Transectos$Altitud++Transectos$Luz3,family = poisson, data = Transectos))
+multicolinealidad # Si es >3 alta colinealidad
+
+#Modelo con las variables mas significativas
 #glm4<-lm(Transectos$Riqueza~Transectos$Luz3)
 glm4<-glm(Transectos$Riqueza~Transectos$Luz3, family = poisson(link = "log"))
 glm4
@@ -141,20 +132,16 @@ AIC(glm4)
 rmse(Transectos$Riqueza, predict(glm3))
 rmse(Transectos$Riqueza, predict(glm4))
 
+
+dispersion <- glm4$deviance / glm4$df.residual 
+dispersion #si es >1.2 tenemos problemas
+plot(cooks.distance(glm4), xlab = "Observation", ylab = "Cook's distance", 
+     type = "h", ylim = c(0, 1.1), cex.lab = 1.5)
+abline(h = 1, lty = 2)
+#Extraemos los coeficientes del modelo
 exp(glm4$coefficients)
 
-plot(Transectos$Riqueza~Transectos$Troncos)
-plot(Transectos$Riqueza~Transectos$Humedad)
-plot(Transectos$Riqueza~Transectos$Temperatura)
-plot(Transectos$Riqueza~Transectos$Zona)
-plot(Transectos$Riqueza~Transectos$Altitud)
-plot(Transectos$Riqueza~Transectos$Temperatura+Transectos$Humedad+Transectos$Troncos)
-install.packages("patchwork")
-library(patchwork)
-A<-ggplot(Transectos,aes(x=Troncos,y=Incidencia, col = Zona,)) + ggtitle("") + geom_point(cex=6) + theme(legend.position="none",text = element_text(size = 24))
-B<-ggplot(Transectos,aes(x=Humedad,y=Incidencia, col = Zona)) + ggtitle("") + geom_point(cex=6) + theme(legend.position="none",text = element_text(size = 24))
-C<-ggplot(Transectos,aes(x=Temperatura,y=Incidencia, col = Zona)) + ggtitle("") + geom_point(cex=6) + theme(legend.position="none",text = element_text(size = 24))
 riqueza<-ggplot(Transectos,aes(x=Luz3,y=Riqueza, col = Zona)) + ggtitle("Modelo lineal generalizado(Poisson)") + geom_point(cex=6) + theme(text = element_text(size = 36),plot.title = element_text(hjust = 0.5))+ 
-  xlab("% Cobertura de dosel") + geom_point() +geom_segment(aes(x = min(Luz3), y = min(Riqueza), xend = max(Luz3), yend = max(Riqueza)))#+ geom_smooth(method="glm")
+          xlab("% Cobertura de dosel") + geom_point() +geom_segment(aes(x = min(Luz3), y = min(Riqueza), xend = max(Luz3), yend = max(Riqueza)))#+ geom_smooth(method="glm")
 riqueza
-A+B+C + plot_layout(nrow = 3,ncol = 1)
+

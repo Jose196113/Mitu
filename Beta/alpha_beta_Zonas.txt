@@ -1,0 +1,38 @@
+       Richness
+Bosque       30
+Chagra       20
+Urbano       18
+$Btotal
+          Bosque    Chagra
+Chagra 0.4848485          
+Urbano 0.5000000 0.3478261
+
+$Brepl
+          Bosque    Chagra
+Chagra 0.1818182          
+Urbano 0.1250000 0.2608696
+
+$Brich
+           Bosque     Chagra
+Chagra 0.30303030           
+Urbano 0.37500000 0.08695652
+
+$Shared
+       Bosque Chagra
+Chagra     17       
+Urbano     16     15
+
+$Unique_to_Cols
+       Bosque Chagra
+Chagra     13       
+Urbano     14      5
+
+$Unique_to_Rows
+       Bosque Chagra
+Chagra      3       
+Urbano      2      3
+
+       Mean Median Min LowerCL UpperCL Max
+Bosque   30     30  30      30      30  30
+Chagra   20     20  20      20      20  20
+Urbano   18     18  18      18      18  18
