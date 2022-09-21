@@ -2,28 +2,25 @@ library(vegan)
 library(readxl)
 library(ggplot2)
 ############################################################################# Anosim-Simper Por UM
-setwd("~/Descargas/Multivariado")
+setwd("~/Rstudio/Mitu/Multi")
 
 Especies<-as.matrix(read_excel("Especies1.xlsx"))
-
-Especies<-Especies[rowSums(Especies[])>0,]##Por si se necesita extraer los ceros
 Especies
 Zonas<-as.matrix(read.csv("Zonas2.csv"))
-Zonas<-read.csv("Zonas1.csv")#Para simper
 Zonas<-as.matrix(Zonas)
 Distancias<-vegdist(Especies, method = "jaccard", binary = TRUE, na.rm = TRUE)
 Distancias
 Anosim<-anosim(Distancias,Zonas, distance = "jaccard")
-Simper<-simper(Distancias, Zonas$Zonas)
+Zonas1<-read.csv("Zonas1.csv")#Para simper
+Simper<-simper(Especies, Zonas1$Zonas)
 Anosim
 Simper
 plot(Anosim)
-plot(Simper)
 ################################################################################ Anosim-Simper Por transecto
-setwd("~/Descargas/Multivariado")
+setwd("~/Rstudio/Mitu/Multi")
 
 Especies<-read_excel("TR1.xlsx")
-#Especies<-Especies[,c(-1,-36)]
+Especies = replace(Especies, Especies >0 , 1)
 Especies<-as.matrix(Especies)
 ##Especies<-Especies[rowSums(Especies[])>0,]##Por si se necesita extraer los ceros
 Especies
@@ -41,14 +38,13 @@ write.csv(Simper,file = "Simper_out.csv")
 library(vegan)
 library(readxl)
 library(ggplot2)
-setwd("~/Descargas/Multivariado")
+library(tidyverse)
 Especies<-read_excel("Especies1.xlsx")
 Especies
 Distancias<-vegdist(Especies,na.rm = TRUE)
 Distancias
 NMDS<-metaMDS(Distancias)
 plot(NMDS)
-library(tidyverse)
 Zonas<-read.csv("Zonas1.csv", header = TRUE, sep = ",")
 Zonas<-Zonas$Zonas
 DF<-NMDS$points %>% as.data.frame() %>% bind_cols(Zonas)
@@ -57,7 +53,7 @@ ggplot(DF,aes(x=MDS1,y=MDS2, col=Zonas)) + geom_point(cex=4) + theme_bw(base_siz
 Variables<-read_excel("Variables1.xlsx",col_names = TRUE)
 Variables<-as.data.frame(Variables)
 
-DF<-NMDS1$points %>% as.data.frame() %>% bind_cols(Variables$Zona,Variables$ID,Variables$Hojarasca,Variables$Altitud,Variables$Dist_Centro,Variables$Luz,Variables$Temperatura,Variables$Humedad)
+DF<-NMDS$points %>% as.data.frame() %>% bind_cols(Variables$Zona,Variables$ID,Variables$Hojarasca,Variables$Altitud,Variables$Dist_Centro,Variables$Luz,Variables$Temperatura,Variables$Humedad)
 colnames(DF)<-c("MDS1","MDS2","Zona","ID","Hojarasca","Altitud","Distancia_Centro_Urbano","Cobertura_dosel","Temperatura","Humedad")
 
 ef1 <- envfit(NMDS, DF, permu = 999)
@@ -76,7 +72,7 @@ library(readxl)
 library(ggplot2)
 library(tidyverse)
 library(svglite)
-install.packages("svglite")
+
 setwd("~/Rstudio/Mitu/Multi")
 
 Transectos<-read_excel("TR.xlsx")
@@ -108,7 +104,7 @@ ggplot(DF2,aes(x=MDS1,y=MDS2, col = Usos)) + ggtitle("Riqueza vs Variables biót
         stat_ellipse(level = 0.85) + theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 28)) +
         #geom_text(data = Vectores, aes(x = NMDS1, y = NMDS2+0.03), label = row.names(Vectores), colour = "navy", fontface = "bold",position=position_jitter(width=0.02,height=0.012)) +
         geom_text(data=DF2,aes(x=MDS1,y=MDS2,label=ID),alpha=0.5, nudge_y = -0.020) +
-        annotate(geom="text", x=0.48, y=-0.54, label="Stress =",color="red") +
+        annotate(geom="text", x=0.55, y=-0.50, label="Stress =",color="red") +
         annotate(geom="text", x=0.55, y=-0.54, label=NMDS1$stress,color="red")
 
 

@@ -25,7 +25,9 @@ out_qdata <- out$iNextEst
 write.table(out_qdata, "out_qdata1.txt")#Tabla de datos que usamos aunque sinceramente eso sale todo desordenado y confunde mas de lo que ayuda
 out#Esto es mas dicienciente
 summary(out_qdata)
+
 out1$iNextEst$coverage_based %>% filter(Method == "Observed")#Porcentajes de cobertura
+
 #Graficamos finalmente
 ggiNEXT(out1, type = 1, se = TRUE, facet.var = "Order.q", color.var = "Assemblage", grey = FALSE) +
           theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 36)) +
@@ -43,7 +45,7 @@ ggiNEXT(out, type = 2, se = TRUE, facet.var = "Order.q", color.var = "Assemblage
 #xlab("Cobertura de muestreo") + ylab("Riqueza")
 
 ####################################################################################
-######################Magnitude la diferencia#######################################
+######################Magnitud de la diferencia#####################################
 ####################################################################################
 
 #Cargar tabla "MD.csv" que permitirá construir la Fig. 3.6
